@@ -1,0 +1,40 @@
+# Virtual environments and Python cache
+venv/
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Training outputs / model artifacts
+logs/
+runs/
+qwen*-finetuned*/
+checkpoint-*/
+*.safetensors
+*.bin
+
+# Generated datasets/artifacts
+data/train.json
+data/eval.json
+data_ready_*/
+
+# Generated results and reports
+baseline/
+baseline_results*.json
+comparison_test_results.json
+ground_truth_comparison.json
+azure_openai_similarity_report.json
+test_results_finetuned_*.json
+finetuned_results_*.json
+comparison_*_exact.json
+comparison_*_summary.md
+
+# Runtime outputs
+*.log
+training_metrics.pdf
+training_metrics.png
