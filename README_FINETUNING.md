@@ -1,6 +1,6 @@
 # Financial News Fine-tuning Guide
 
-Complete end-to-end guide for fine-tuning Qwen 2.5 0.5B Instruct on financial news data.
+Complete end-to-end guide for fine-tuning Qwen 2.5 7B Instruct on financial news data.
 
 ## 📋 Table of Contents
 
@@ -17,7 +17,7 @@ Complete end-to-end guide for fine-tuning Qwen 2.5 0.5B Instruct on financial ne
 
 ## 🎯 Overview
 
-This project fine-tunes the **Qwen 2.5 0.5B Instruct** model to extract structured information from financial news articles. The model learns to identify:
+This project fine-tunes the **Qwen 2.5 7B Instruct** model to extract structured information from financial news articles. The model learns to identify:
 - Company name and ticker
 - Cause of stock movement
 - Effect (stock price change)
@@ -64,7 +64,7 @@ IP-LLM/
 ├── prepare_dataset.py                # Data preparation script
 ├── finetune/
 │   └── finetuning.py                # Main fine-tuning script
-├── qwen2.5-0.5b-finetuned/         # Fine-tuned model (created after training)
+├── qwen2.5-7b-finetuned/         # Fine-tuned model (created after training)
 ├── logs/                            # Training logs (TensorBoard)
 └── requirements.txt                 # Python dependencies
 ```
@@ -178,7 +178,7 @@ python finetune/finetuning.py
 **Training Output:**
 ```
 ======================================================================
-🚀 Qwen 2.5 0.5B Instruct Fine-tuning
+🚀 Qwen 2.5 7B Instruct Fine-tuning
 ======================================================================
 
 STEP 1: Device Setup
@@ -188,11 +188,11 @@ STEP 1: Device Setup
 
 STEP 2: Model Loading
 ======================================================================
-📥 Loading model: Qwen/Qwen2.5-0.5B-Instruct
+📥 Loading model: Qwen/Qwen2.5-7B-Instruct
 ✅ Tokenizer loaded
 ✅ Model loaded
-   Parameters: 520.00M
-   Trainable: 8.32M (1.6%)
+   Parameters: 7.62B
+   Trainable: ~5M (~0.07%)
 
 STEP 3: Data Loading
 ======================================================================
@@ -235,13 +235,13 @@ After training, you should see:
 ✅ Training Complete!
 Final training loss: 0.1234
 
-✅ Model saved to: ./qwen2.5-0.5b-finetuned
-✅ Tokenizer saved to: ./qwen2.5-0.5b-finetuned
+✅ Model saved to: ./qwen2.5-7b-finetuned
+✅ Tokenizer saved to: ./qwen2.5-7b-finetuned
 ```
 
 Check the output directory:
 ```bash
-ls -lh qwen2.5-0.5b-finetuned/
+ls -lh qwen2.5-7b-finetuned/
 # Should contain:
 # - adapter_config.json
 # - adapter_model.bin (or adapter_model.safetensors)
@@ -270,7 +270,7 @@ ls -lh qwen2.5-0.5b-finetuned/
 
 **Architecture:**
 ```
-Base Model (Qwen 2.5 0.5B)
+Base Model (Qwen 2.5 7B)
     ↓
 LoRA Adapters (only these are trained)
     ↓
@@ -278,7 +278,7 @@ Fine-tuned Model
 ```
 
 **LoRA (Low-Rank Adaptation):**
-- Only trains ~1-2% of model parameters
+- Only trains ~0.07% of model parameters (~5M of 7.6B)
 - Much faster and uses less memory
 - Can be merged back into base model if needed
 
@@ -395,7 +395,7 @@ python prepare_dataset.py --input financial_news_training.jsonl --output-dir dat
 
 **Solution:**
 - Check disk space: `df -h`
-- Check write permissions: `ls -ld qwen2.5-0.5b-finetuned/`
+- Check write permissions: `ls -ld qwen2.5-7b-finetuned/`
 - Ensure training completes (not interrupted)
 
 ---
@@ -422,14 +422,14 @@ tensorboard --logdir=./logs --port=6006
 ### Checkpoints
 
 Training saves checkpoints at:
-- `qwen2.5-0.5b-finetuned/checkpoint-100/`
-- `qwen2.5-0.5b-finetuned/checkpoint-200/`
+- `qwen2.5-7b-finetuned/checkpoint-100/`
+- `qwen2.5-7b-finetuned/checkpoint-200/`
 - etc.
 
 To resume from checkpoint:
 ```python
 # Modify finetuning.py to add:
-# training_args.resume_from_checkpoint = "qwen2.5-0.5b-finetuned/checkpoint-200"
+# training_args.resume_from_checkpoint = "qwen2.5-7b-finetuned/checkpoint-200"
 ```
 
 ---
@@ -444,16 +444,16 @@ from peft import PeftModel
 
 # Load base model
 base_model = AutoModelForCausalLM.from_pretrained(
-    "Qwen/Qwen2.5-0.5B-Instruct",
+    "Qwen/Qwen2.5-7B-Instruct",
     torch_dtype=torch.float16,
     device_map="auto"
 )
 
 # Load fine-tuned adapters
-model = PeftModel.from_pretrained(base_model, "./qwen2.5-0.5b-finetuned")
+model = PeftModel.from_pretrained(base_model, "./qwen2.5-7b-finetuned")
 
 # Load tokenizer
-tokenizer = AutoTokenizer.from_pretrained("./qwen2.5-0.5b-finetuned")
+tokenizer = AutoTokenizer.from_pretrained("./qwen2.5-7b-finetuned")
 
 # Prepare input
 messages = [
@@ -477,12 +477,12 @@ To create a standalone model without needing base + adapters:
 ```python
 from peft import PeftModel
 
-base_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
-model = PeftModel.from_pretrained(base_model, "./qwen2.5-0.5b-finetuned")
+base_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-7B-Instruct")
+model = PeftModel.from_pretrained(base_model, "./qwen2.5-7b-finetuned")
 
 # Merge and save
 merged_model = model.merge_and_unload()
-merged_model.save_pretrained("./qwen2.5-0.5b-finetuned-merged")
+merged_model.save_pretrained("./qwen2.5-7b-finetuned-merged")
 ```
 
 ---
@@ -506,7 +506,7 @@ python test_model.py  # (create this to test)
 - Training loss: ~0.1-0.3 (depends on data)
 - Evaluation loss: Similar to training loss
 - Training time: 1-2 hours on H800
-- Model size: ~2MB (just adapters) or ~500MB (merged)
+- Model size: ~20MB (just adapters) or ~15GB (merged)
 
 ---
 
